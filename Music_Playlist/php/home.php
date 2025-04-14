@@ -5,7 +5,7 @@ if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
     exit();
 }
-
+// updated with session
 $user_id = $_SESSION["user_id"]; 
 
 // Fetch songs from database for the logged-in user
@@ -37,7 +37,6 @@ $result = $stmt->get_result();
             background-position: center;
         }
 
-        /* NAVBAR HOME, ADD SONG, VIEW PLAYLIST */
         nav {
             width: 20%; 
             background-color: #000000;
@@ -70,7 +69,6 @@ $result = $stmt->get_result();
             margin-top: 40px;
         }
 
-        /* MAIN SEARCH BAR */
         .search_container {
             position: relative;
             display: inline-block;
@@ -123,7 +121,6 @@ $result = $stmt->get_result();
             margin-top: 30px;
         }
 
-        /* All Songs List */
         .song_list {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -137,29 +134,23 @@ $result = $stmt->get_result();
         .song_list::-webkit-scrollbar {
             width: 8px;
         }
-
         .song_list::-webkit-scrollbar-track {
             background: #333;
             border-radius: 10px;
         }
-
         .song_list::-webkit-scrollbar-thumb {
             background: #888;
             border-radius: 10px;
         }
-
         .song_list::-webkit-scrollbar-thumb:hover {
             background: #aaa;
         }
-
         .song_list::before {
-            
             color: white;
             text-align: center;
             grid-column: span 2;
         }
 
-        /* Empty placeholders */
         .most_played::before {
             content: "Most Played - No data yet";
             color: #bbb;
@@ -174,7 +165,6 @@ $result = $stmt->get_result();
             color: white;
         }
 
-        /* Song Item */
         .song_item {
             display: flex;
             align-items: center;
@@ -187,28 +177,21 @@ $result = $stmt->get_result();
             width: 95%;
             cursor: pointer;
         }
-        /* Song Image */
         .song_img {
             width: 50px;
             height: 50px;
             border-radius: 5px;
             object-fit: cover;
         }
-
-        /* Song Name */
         .p_song_name {
             flex-grow: 1;
             color: white;
             font-size: 16px;
         }
-
-        /* Song Actions */
         .song_actions {
             display: flex;
             gap: 8px;
         }
-
-        /* Icon Buttons */
         .icon_btn {
             border: none;
             padding: 8px;
@@ -222,28 +205,20 @@ $result = $stmt->get_result();
             font-size: 16px;
             transition: 0.3s ease-in-out;
         }
-
-        /* Green for Add Button */
         .icon_add {
             background-color: #008C48;
             color: white;
         }
-
         .icon_add:hover {
             background-color: #03c969;
         }
-
-        /* Red for Remove Button */
         .icon_remove {
             background-color: #8B0000;
             color: white;
         }
-
         .icon_remove:hover {
             background-color: #FF0000;
         }
-
-        /* popup embedded video player */
         .popup_player {
             display: none;
             position: fixed;
@@ -286,18 +261,14 @@ $result = $stmt->get_result();
             width: 100%;
             white-space: pre-line; 
         }
-
-
         #lyricsText {
             max-height: 300px; 
             white-space: pre-wrap; 
         }
-
         @keyframes scrollLyrics {
             0% { transform: translateY(0); }
             100% { transform: translateY(-100%); }
         }
-
         .playlist_popup {
             display: none;
             position: fixed;
@@ -311,13 +282,11 @@ $result = $stmt->get_result();
             width: 400px;
             text-align: center;
         }
-
         .playlist_popup select {
             width: 100%;
             padding: 8px;
             margin-top: 10px;
         }
-
         .playlist_popup button {
             background-color: #008C48;
             color: white;
@@ -326,13 +295,50 @@ $result = $stmt->get_result();
             margin-top: 10px;
             cursor: pointer;
         }
-
         .playlist_popup .close_btn {
             position: absolute;
             top: 10px;
             right: 15px;
             cursor: pointer;
             font-size: 30px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            position: relative;
+        }
+        .modal-content p {
+            margin: 0 0 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            background-color: #008C48;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #03c969;
         }
 </style>
 </head>
@@ -354,9 +360,6 @@ $result = $stmt->get_result();
         </div>
         <button class="btn_logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log out</button>
         
-        <!-- <div class="most_played" id="mostPlayed"> -->
-            
-        </div>
         <div class="song_list" id="songList">
         <?php
             if ($result->num_rows > 0) {
@@ -370,7 +373,6 @@ $result = $stmt->get_result();
                     '\'' . htmlspecialchars($row["song_name"]) . '\', ' . 
                     '\'' . htmlspecialchars($row["youtube_link"]) . '\'' . 
                     ')"><i class="fas fa-play"></i></button>';
-                
                     echo "<button class='icon_btn icon_add' onclick='addToPlaylist(" . $row["song_id"] . ")'><i class='fas fa-plus'></i></button>";
                     echo "<button class='icon_btn icon_remove' onclick='deleteSong(" . $row["song_id"] . ")'><i class='fas fa-trash'></i></button>";
                     echo "</div>";
@@ -397,7 +399,6 @@ $result = $stmt->get_result();
         <pre id="lyricsText" style="color: white; white-space: pre-wrap; text-align: left;"></pre>
     </div>
 </div>
-</div>
 
 <!-- POPUP PLAYLIST -->
 <div id="playlistPopup" class="playlist_popup">
@@ -411,78 +412,100 @@ $result = $stmt->get_result();
     <button onclick="confirmAddToPlaylist()">Add to Playlist</button>
 </div>
 
-<!-- Playlist Popup -->
-<!-- <div id="selectPlaylistPopup" style="display:none;">
-  <label>Select Playlist:</label>
-  <select id="playlistSelect"> -->
-    <!-- Dynamically fill playlists here -->
-  <!-- </select>
-  <button id="confirmAddToPlaylist">Add</button>
-</div> -->
+<!-- Modal for Messages -->
+<div class="modal-overlay" id="messageModal">
+    <div class="modal-content">
+        <p id="modalMessage"></p>
+        <button onclick="closeModal('messageModal')">OK</button>
+    </div>
+</div>
 
 <script src="script.js"></script>
 </body>
 </html>
 <script>
+    // Function to show modal with a message
+    function showModal(message, modalId = 'messageModal') {
+        const modal = document.getElementById(modalId);
+        const modalMessage = document.getElementById('modalMessage');
+        modalMessage.textContent = message;
+        modal.style.display = 'flex';
+    }
+
+    // Function to close modal
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'none';
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
-            if (document.referrer === "" || document.referrer.indexOf(window.location.hostname) === -1) {
-                alert("Direct access is not allowed!");
+        if (document.referrer === "" || document.referrer.indexOf(window.location.hostname) === -1) {
+            showModal("Direct access is not allowed!");
+            setTimeout(() => {
                 window.location.href = "login.php"; 
-            }
-        });
-
-        function logout() {
-            let confirmAction = confirm('Are you sure you want to Logout?');
-            if (confirmAction) {
-                window.location.href = "../php/logout.php"; 
-            }
+            }, 2000);
         }
+    });
 
-        let selectedSongId = null;
+    function logout() {
+        let confirmAction = confirm('Are you sure you want to Logout?');
+        if (confirmAction) {
+            window.location.href = "../php/logout.php"; 
+        }
+    }
+
+    let selectedSongId = null;
 
     function addToPlaylist(songId) {
-            selectedSongId = songId; 
-    document.getElementById("playlistPopup").style.display = "block";
+        selectedSongId = songId; 
+        document.getElementById("playlistPopup").style.display = "block";
 
-    fetch("get_playlists.php") 
-        .then(response => response.json())
-        .then(data => {
-            let dropdown = document.getElementById("playlistSelect");
-            dropdown.innerHTML = '<option value="">Select a Playlist</option>'; 
+        fetch("get_playlists.php") 
+            .then(response => response.json())
+            .then(data => {
+                let dropdown = document.getElementById("playlistSelect");
+                dropdown.innerHTML = '<option value="">Select a Playlist</option>'; 
 
-            data.forEach(playlist => {
-                let option = document.createElement("option");
-                option.value = playlist.playlist_id;
-                option.textContent = playlist.playlist_name;
-                dropdown.appendChild(option);
+                data.forEach(playlist => {
+                    let option = document.createElement("option");
+                    option.value = playlist.playlist_id;
+                    option.textContent = playlist.playlist_name;
+                    dropdown.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching playlists:", error);
+                showModal("Error fetching playlists.");
             });
-        })
-        .catch(error => console.error("Error fetching playlists:", error));
     }
+
     function confirmAddToPlaylist() {
-    let playlistId = document.getElementById("playlistSelect").value;
+        let playlistId = document.getElementById("playlistSelect").value;
 
-    if (!playlistId) {
-        alert("Please select a playlist.");
-        return;
+        if (!playlistId) {
+            showModal("Please select a playlist.");
+            return;
+        }
+
+        fetch("add_to_playlist.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `song_id=${selectedSongId}&playlist_id=${playlistId}`
+        })
+        .then(response => response.text())
+        .then(result => {
+            showModal(result);
+            closePlaylistPopup();
+        })
+        .catch(error => {
+            console.error("Error adding song to playlist:", error);
+            showModal("Error adding song to playlist.");
+        });
     }
 
-    fetch("add_to_playlist.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `song_id=${selectedSongId}&playlist_id=${playlistId}`
-    })
-    .then(response => response.text())
-    .then(result => {
-        alert(result);
-        closePlaylistPopup();
-    })
-    .catch(error => console.error("Error adding song to playlist:", error));
-}
-
-function closePlaylistPopup() {
-    document.getElementById("playlistPopup").style.display = "none";
-}
+    function closePlaylistPopup() {
+        document.getElementById("playlistPopup").style.display = "none";
+    }
 
     function removeSong(songId) {
         let confirmAction = confirm('Are you sure you want to remove this song?');
@@ -492,134 +515,123 @@ function closePlaylistPopup() {
     }
 
     function showPlayer(image, name, youtubeLink) {
-    let youtubeId = extractYouTubeId(youtubeLink);
-    if (!youtubeId) {
-        alert("Invalid YouTube Link!");
-        return;
-    }
-
-    document.getElementById('popupPlayer').style.display = 'block';
-    document.getElementById('playerSongName').innerText = name;
-
-    let iframe = document.createElement('iframe');
-    iframe.width = "100%";
-    iframe.height = "200"; 
-    iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1&controls=1"; 
-    iframe.frameBorder = "0";
-    iframe.allow = "autoplay; encrypted-media";
-    iframe.allowFullscreen = true;
-
-    let playerContainer = document.getElementById('playerIframeContainer');
-    playerContainer.innerHTML = ""; 
-    playerContainer.appendChild(iframe);
-
-    document.getElementById('lyricsContainer').style.display = 'block';
-
-    // Extract artist and song title
-    let parts = name.split(" - "); 
-    
-    if (parts.length >= 2) {
-        var artist = parts[0].trim(); 
-        var title = parts[1].trim();  
-    } else {
-        var title = name.trim(); 
-        var artist = ""; 
-    }
-
-    console.log("Searching lyrics for:", title, "by", artist); // Debugging
-
-    // Only fetch if we have both artist and title
-    if (!artist || !title) {
-        document.getElementById('lyricsText').innerText = "Please format song names as 'Artist - Title' for lyrics.";
-        return;
-    }
-
-    // Add loading message
-    document.getElementById('lyricsText').innerText = "Loading lyrics...";
-
-    fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Lyrics not available');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.lyrics) {
-                document.getElementById('lyricsText').innerText = data.lyrics;
-            } else {
-                document.getElementById('lyricsText').innerText = "Lyrics not found.";
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching lyrics:", error);
-            document.getElementById('lyricsText').innerText = "Lyrics not available.";
-        });
-}
-
-
-// Function to extract YouTube Video ID from a URL
-function extractYouTubeId(url) {
-    let match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-    return match ? match[1] : null;
-}
-
-function closePlayer() {
-    document.getElementById('popupPlayer').style.display = 'none';
-    document.getElementById('playerIframeContainer').innerHTML = "";
-}
-
-// Search functionality for home.php
-document.addEventListener('DOMContentLoaded', function() {
-    const searchBar = document.getElementById('search');
-    const songItems = document.querySelectorAll('.song_item');
-    
-    searchBar.addEventListener('keyup', function() {
-        const searchTerm = searchBar.value.toLowerCase();
-        
-        // Filter songs based on search term
-        songItems.forEach(item => {
-            const songName = item.querySelector('.p_song_name').textContent.toLowerCase();
-            
-            if (songName.includes(searchTerm)) {
-                item.style.display = 'flex';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-        
-        // Show a message if no songs match the search
-        let visibleSongs = 0;
-        songItems.forEach(item => {
-            if (item.style.display !== 'none') {
-                visibleSongs++;
-            }
-        });
-        
-        // Check if "No results" message already exists
-        let noResultsMsg = document.getElementById('noResultsMessage');
-        
-        if (visibleSongs === 0) {
-            if (!noResultsMsg) {
-                noResultsMsg = document.createElement('p');
-                noResultsMsg.id = 'noResultsMessage';
-                noResultsMsg.className = 'p_no_songs_available';
-                noResultsMsg.textContent = 'No songs matching your search.';
-                document.getElementById('songList').appendChild(noResultsMsg);
-            }
-        } else {
-            if (noResultsMsg) {
-                noResultsMsg.remove();
-            }
+        let youtubeId = extractYouTubeId(youtubeLink);
+        if (!youtubeId) {
+            showModal("Invalid YouTube Link!");
+            return;
         }
-    });
-    
-    // Clear search functionality when clicking the search icon
-    const searchIcon = document.querySelector('.search_icon');
-    searchIcon.addEventListener('click', function() {
-        searchBar.value = '';
 
-        searchBar.dispatchEvent(new Event('keyup'));
+        document.getElementById('popupPlayer').style.display = 'block';
+        document.getElementById('playerSongName').innerText = name;
+
+        let iframe = document.createElement('iframe');
+        iframe.width = "100%";
+        iframe.height = "200"; 
+        iframe.src = "https://www.youtube.com/embed/" + youtubeId + "?autoplay=1&controls=1"; 
+        iframe.frameBorder = "0";
+        iframe.allow = "autoplay; encrypted-media";
+        iframe.allowFullscreen = true;
+
+        let playerContainer = document.getElementById('playerIframeContainer');
+        playerContainer.innerHTML = ""; 
+        playerContainer.appendChild(iframe);
+
+        document.getElementById('lyricsContainer').style.display = 'block';
+
+        let parts = name.split(" - "); 
+        
+        if (parts.length >= 2) {
+            var artist = parts[0].trim(); 
+            var title = parts[1].trim();  
+        } else {
+            var title = name.trim(); 
+            var artist = ""; 
+        }
+
+        console.log("Searching lyrics for:", title, "by", artist);
+
+        if (!artist || !title) {
+            document.getElementById('lyricsText').innerText = "Please format song names as 'Artist - Title' for lyrics.";
+            return;
+        }
+
+        document.getElementById('lyricsText').innerText = "Loading lyrics...";
+
+        fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Lyrics not available');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.lyrics) {
+                    document.getElementById('lyricsText').innerText = data.lyrics;
+                } else {
+                    document.getElementById('lyricsText').innerText = "Lyrics not found.";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching lyrics:", error);
+                document.getElementById('lyricsText').innerText = "Lyrics not available.";
+            });
+    }
+
+    function extractYouTubeId(url) {
+        let match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+        return match ? match[1] : null;
+    }
+
+    function closePlayer() {
+        document.getElementById('popupPlayer').style.display = 'none';
+        document.getElementById('playerIframeContainer').innerHTML = "";
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchBar = document.getElementById('search');
+        const songItems = document.querySelectorAll('.song_item');
+        
+        searchBar.addEventListener('keyup', function() {
+            const searchTerm = searchBar.value.toLowerCase();
+            
+            songItems.forEach(item => {
+                const songName = item.querySelector('.p_song_name').textContent.toLowerCase();
+                
+                if (songName.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            let visibleSongs = 0;
+            songItems.forEach(item => {
+                if (item.style.display !== 'none') {
+                    visibleSongs++;
+                }
+            });
+            
+            let noResultsMsg = document.getElementById('noResultsMessage');
+            
+            if (visibleSongs === 0) {
+                if (!noResultsMsg) {
+                    noResultsMsg = document.createElement('p');
+                    noResultsMsg.id = 'noResultsMessage';
+                    noResultsMsg.className = 'p_no_songs_available';
+                    noResultsMsg.textContent = 'No songs matching your search.';
+                    document.getElementById('songList').appendChild(noResultsMsg);
+                }
+            } else {
+                if (noResultsMsg) {
+                    noResultsMsg.remove();
+                }
+            }
+        });
+        
+        const searchIcon = document.querySelector('.search_icon');
+        searchIcon.addEventListener('click', function() {
+            searchBar.value = '';
+            searchBar.dispatchEvent(new Event('keyup'));
+        });
     });
-});
 </script>
