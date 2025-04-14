@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" 
+    integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" 
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Home</title>
+</head>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex; 
+    background: linear-gradient(to bottom, black, gray) no-repeat;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+/* NAVBAR HOME, ADD SONG, VIEW PLAYLIST */
+nav {
+    width: 20%; 
+    background-color: #000000;
+    padding: 10px 0; 
+    height: 100vh; 
+}
+.nav_menu {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+}
+.nav_menu a {
+    color: white;
+    text-decoration: none;
+    padding: 14px 20px;
+    width: 89%; 
+    text-align: center; 
+    transition: background-color 0.3s;
+}
+.nav_menu a:hover {
+    background-color: #232121;
+    border-radius: 5px;
+}
+
+.content {
+    flex: 1; 
+    padding: 20px; 
+}
+.home{
+    margin-top: 40px;
+}
+
+/* MAIN SEARH BAR */
+.search_container {
+    position: relative;
+    display: inline-block;
+}
+
+.search_bar {
+    width: 690px; /* Adjust width as needed */
+    padding: 10px 35px 10px 10px; /* Space for the icon */
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+    margin-top: 20px;
+    margin-left: 150px;
+}
+
+.search_icon {
+    position: absolute;
+    right: 10px;
+    top: 65%;
+    transform: translateY(-50%);
+    color: #555;
+    cursor: pointer;
+}
+.btn_logout{
+    margin-left: 200px;
+    padding: 5px;
+    background-color: #008C48;
+    border: none;
+    border-radius: 10px;
+    width: 100px;
+    height: 40px;
+}
+.btn_logout:hover{
+    background-color: #03c969;
+    cursor: pointer;
+}
+
+.most_played {
+    width: 100%;
+    max-height: 200px;
+    overflow: hidden;
+    margin: 20px 0;
+    background: rgba(255, 255, 255, 0.1);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* All Songs List */
+.songs_list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 10px;
+}
+
+.songs_list::before {
+    content: "No songs available.";
+    color: #bbb;
+    text-align: center;
+    grid-column: span 2;
+}
+
+/* Empty placeholders */
+.most_played::before {
+    content: "Most Played - No data yet";
+    color: #bbb;
+    font-size: 18px;
+}
+</style>
+<body>
+    
+    <nav>
+        <div class="nav_menu">
+            <a href="Home.html" class="home"><i class="uil uil-estate"></i> Home</a>
+            <a href="AddSong.html"><i class="uil uil-music"></i> Add Song</a>
+            <a href="ViewPlaylist.html"><i class="uil uil-list-ul"></i> View Playlist</a>
+        </div>
+    </nav>
+
+    <main class="content">
+        <div class="search_container">
+            <input type="search" name="" id="" placeholder="Search" class="search_bar">
+            <i class="fas fa-search search_icon"></i> 
+        </div>
+        <button class="btn_logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Log out</button>
+
+        <div class="most_played" id="mostPlayed">
+
+        </div>
+
+        <div class="song_list" id="songList">
+
+        </div>
+    </main>
+</body>
+</html>
+<script>
+    function logout() {
+        let confirmAction = confirm('Are you sure you want to Logout?');
+        if(confirmAction){
+            window.location.href = "../php/logout.php"; // Redirect to logout script
+        }
+       
+    }
+
+</script>

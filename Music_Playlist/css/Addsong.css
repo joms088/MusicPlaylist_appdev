@@ -1,0 +1,92 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex; 
+    background: linear-gradient(to bottom, black, gray) no-repeat;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+/* NAVBAR HOME, ADD SONG, VIEW PLAYLIST */
+nav {
+    width: 20%; 
+    background-color: #000000;
+    padding: 10px 0; 
+    height: 100vh; 
+}
+.nav_menu {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+}
+.nav_menu a {
+    color: white;
+    text-decoration: none;
+    padding: 14px 20px;
+    width: 89%; 
+    text-align: center; 
+    transition: background-color 0.3s;
+}
+.nav_menu a:hover {
+    background-color: #232121;
+    border-radius: 5px;
+}
+
+.content {
+    flex: 1; 
+    padding: 20px; 
+}
+.home{
+    margin-top: 40px;
+}
+
+/* MAIN SEARH BAR */
+.content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.add_song_form {
+    background: #1a1a1a;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+    color: white;
+    width: 350px;
+    text-align: center;
+}
+.add_song_form h2 {
+    margin-bottom: 20px;
+}
+.add_song_form label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+}
+.add_song_form input {
+    width: 95%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+}
+.add_song_form input[type="file"] {
+    background: white;
+}
+.add_song_btn {
+    width: 100%;
+    padding: 10px;
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.add_song_btn:hover {
+    background: darkgreen;
+}
