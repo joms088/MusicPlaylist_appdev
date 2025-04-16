@@ -41,7 +41,6 @@ $conn->close();
             height: 100vh;
         }
 
-        /* Sidebar Navigation */
         nav {
             width: 20%; 
             background-color: #000000;
@@ -69,7 +68,6 @@ $conn->close();
             margin-top: 40px;
         }
 
-        /* Content Area */
         .content {
             flex: 1;
             padding: 50px;
@@ -77,7 +75,6 @@ $conn->close();
             flex-direction: column;
         }
 
-        /* New Playlist Button */
         .new-playlist-btn {
             display: flex;
             align-items: center;
@@ -100,7 +97,6 @@ $conn->close();
             color: black;
         }
 
-        /* Playlist List */
         .playlist-list {
             margin-top: 30px;
         }
@@ -138,7 +134,6 @@ $conn->close();
             color: red;
         }
 
-        /* Popup Form */
         .popup-overlay {
             display: none;
             position: fixed;
@@ -201,10 +196,47 @@ $conn->close();
             transition: .2s;
         }
 
-        /* Songs Container */
         #songsContainer {
             margin-top: 20px;
             color: white;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            position: relative;
+        }
+        .modal-content p {
+            margin: 0 0 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            background-color: #008C48;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #03c969;
         }
     </style>
 </head>
@@ -219,12 +251,10 @@ $conn->close();
     </nav>
 
     <div class="content">
-        <!-- New Playlist Button -->
         <div class="new-playlist-btn" id="openPopup">
             <i class="fa fa-plus"></i> New Playlist
         </div>
 
-        <!-- Playlist List -->
         <div class="playlist-list">
         <?php foreach ($playlists as $playlist): ?>
             <div class="playlist-item">
@@ -235,10 +265,8 @@ $conn->close();
             </div>
         <?php endforeach; ?>
         </div>
-
     </div>
 
-    <!-- Popup Form -->
     <div class="popup-overlay" id="popup">
         <div class="popup-box">
             <h3>Create New Playlist</h3>
@@ -250,52 +278,73 @@ $conn->close();
         </div>
     </div>
 
+    <!-- Modal for Messages -->
+    <div class="modal-overlay" id="messageModal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button onclick="closeModal('messageModal')">OK</button>
+        </div>
+    </div>
+
     <script>
+        // Function to show modal with a message
+        function showModal(message, modalId = 'messageModal') {
+            const modal = document.getElementById(modalId);
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        // Function to close modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+        }
+
         $(document).ready(function() {
-            // Show Create Playlist Popup
             $("#openPopup").click(function() {
                 $("#popup").css({ "visibility": "visible", "opacity": "1" });
             });
 
-            // Close Popup
             $("#closePopup").click(function() {
                 $("#popup").css({ "visibility": "hidden", "opacity": "0" });
             });
 
-            // Save Playlist Using AJAX
             $("#savePlaylist").click(function() {
                 let playlistName = $("#playlistName").val().trim();
                 if (playlistName === "") {
-                    alert("Please enter a playlist name.");
+                    showModal("Please enter a playlist name.");
                     return;
                 }
 
                 $.post("save_playlist.php", { playlist_name: playlistName }, function(response) {
                     if (response === "success") {
-                        alert("Playlist created successfully!");
-                        location.reload(); 
+                        showModal("Playlist created successfully!");
+                        setTimeout(() => {
+                            location.reload(); 
+                        }, 2000);
                     } else {
-                        alert("Failed to save playlist.");
+                        showModal("Failed to save playlist.");
                     }
                 });
             });
 
-            // Delete Playlist using AJAX
             $(".delete-btn").click(function() {
                 let playlistId = $(this).data("playlist-id");
                 if (confirm("Are you sure you want to delete this playlist?")) {
                     $.post("delete_playlist.php", { playlist_id: playlistId }, function(response) {
                         if (response === "success") {
-                            alert("Playlist deleted successfully.");
-                            location.reload();
+                            showModal("Playlist deleted successfully.");
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
                         } else {
-                            alert("Failed to delete playlist.");
+                            showModal("Failed to delete playlist.");
                         }
                     });
                 }
             });
         });
     </script>
-
 </body>
 </html>

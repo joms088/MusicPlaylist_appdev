@@ -8,59 +8,56 @@ error_reporting(E_ALL);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (!isset($_SESSION["user_id"])) {
-        die("Error: You must be logged in to add a song.");
-    }
-
-    $userId = $_SESSION["user_id"];
-
-    $checkUserStmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
-    $checkUserStmt->bind_param("i", $userId);
-    $checkUserStmt->execute();
-    $result = $checkUserStmt->get_result();
-
-    if ($result->num_rows === 0) {
-        die("Error: Invalid user. Please log in again.");
-    }
-
-    $checkUserStmt->close(); 
-
-    $songTitle = trim($_POST["song_title"]);
-    $youtubeLink = trim($_POST["youtube_link"]);
-
-    if (empty($songTitle) || empty($youtubeLink)) {
-        die("Error: Song title and YouTube link are required!");
-    }
-
-    // Function to extract YouTube video ID
-    function getYouTubeID($url) {
-        preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/', $url, $matches);
-        return $matches[1] ?? null;
-    }
-
-    // Extract video ID and generate the thumbnail URL
-    $videoID = getYouTubeID($youtubeLink);
-    if (!$videoID) {
-        die("Error: Invalid YouTube link.");
-    }
-    $thumbnailURL = "https://img.youtube.com/vi/$videoID/hqdefault.jpg";
-
-    // Insert song details into the database
-    $stmt = $conn->prepare("INSERT INTO songs (song_name, youtube_link, picture, user_id) VALUES (?, ?, ?, ?)");
-    if (!$stmt) {
-        die("Error preparing statement: " . $conn->error);
-    }
-
-    // Bind parameters and execute
-    $stmt->bind_param("sssi", $songTitle, $youtubeLink, $thumbnailURL, $userId);
-    
-    if ($stmt->execute()) {
-        header("Location: add_song.php?success=1");
-        exit();
+        $errorMessage = "You must be logged in to add a song.";
     } else {
-        die("Error adding song: " . $stmt->error);
-    }
+        $userId = $_SESSION["user_id"];
 
-    $stmt->close();
+        $checkUserStmt = $conn->prepare("SELECT user_id FROM users WHERE user_id = ?");
+        $checkUserStmt->bind_param("i", $userId);
+        $checkUserStmt->execute();
+        $result = $checkUserStmt->get_result();
+
+        if ($result->num_rows === 0) {
+            $errorMessage = "Invalid user. Please log in again.";
+        } else {
+            $checkUserStmt->close(); 
+
+            $songTitle = trim($_POST["song_title"]);
+            $youtubeLink = trim($_POST["youtube_link"]);
+
+            if (empty($songTitle) || empty($youtubeLink)) {
+                $errorMessage = "Song title and YouTube link are required!";
+            } else {
+                // Function to extract YouTube video ID
+                function getYouTubeID($url) {
+                    preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/', $url, $matches);
+                    return $matches[1] ?? null;
+                }
+
+                $videoID = getYouTubeID($youtubeLink);
+                if (!$videoID) {
+                    $errorMessage = "Invalid YouTube link.";
+                } else {
+                    $thumbnailURL = "https://img.youtube.com/vi/$videoID/hqdefault.jpg";
+
+                    $stmt = $conn->prepare("INSERT INTO songs (song_name, youtube_link, picture, user_id) VALUES (?, ?, ?, ?)");
+                    if (!$stmt) {
+                        $errorMessage = "Error preparing statement: " . $conn->error;
+                    } else {
+                        $stmt->bind_param("sssi", $songTitle, $youtubeLink, $thumbnailURL, $userId);
+                        
+                        if ($stmt->execute()) {
+                            header("Location: add_song.php?success=1");
+                            exit();
+                        } else {
+                            $errorMessage = "Error adding song: " . $stmt->error;
+                        }
+                        $stmt->close();
+                    }
+                }
+            }
+        }
+    }
 }
 ?>
 
@@ -86,7 +83,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             background-position: center;
         }
 
-        /* NAVBAR HOME, ADD SONG, VIEW PLAYLIST */
         nav {
             width: 20%; 
             background-color: #000000;
@@ -119,7 +115,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             margin-top: 40px;
         }
 
-        /* MAIN FORM */
         .content {
             display: flex;
             justify-content: center;
@@ -169,6 +164,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             border-radius: 5px;
             margin-top: 10px;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            position: relative;
+        }
+        .modal-content p {
+            margin: 0 0 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            background-color: #008C48;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #03c969;
+        }
     </style>
 </head>
 <body>
@@ -200,7 +233,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
     </main>
 
+    <!-- Modal for Messages -->
+    <div class="modal-overlay" id="messageModal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button onclick="closeModal('messageModal')">OK</button>
+        </div>
+    </div>
+
     <script>
+        // Function to show modal with a message
+        function showModal(message, modalId = 'messageModal') {
+            const modal = document.getElementById(modalId);
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+        }
+
+        // Function to close modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+        }
+
         document.getElementById("youtube_link").addEventListener("input", function () {
             let url = this.value;
             let videoID = extractYouTubeID(url);
@@ -213,13 +268,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             let match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/);
             return match ? match[1] : null;
         }
+
         document.addEventListener("DOMContentLoaded", function() {
-    // Check for success parameter in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('success')) {
-        alert("Song added successfully!");
-    }
-});
+            // Check for success parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('success')) {
+                showModal("Song added successfully!");
+            }
+
+            // Show any error messages from PHP
+            <?php if (isset($errorMessage)) { ?>
+                showModal("<?php echo $errorMessage; ?>");
+            <?php } ?>
+        });
     </script>
 </body>
 </html>

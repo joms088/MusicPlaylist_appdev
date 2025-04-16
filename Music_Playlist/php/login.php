@@ -1,5 +1,14 @@
 <?php
 session_start();
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+if (isset($_SESSION["user_id"])) {
+    header("Location: home.php");
+    exit();
+}
+
 require "db_connection.php";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -19,10 +28,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             header("Location: ../php/home.php"); 
             exit();
         } else {
-            echo "<script>alert('Invalid password.'); window.location.href = 'login.php';</script>";
+            $errorMessage = "Invalid password.";
         }
     } else {
-        echo "<script>alert('User not found.'); window.location.href = 'login.php';</script>";
+        $errorMessage = "User not found.";
     }
 }
 ?>
@@ -193,6 +202,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             color: var(--error);
             font-size: 14px;
             margin-top: 5px;
+            display: none;
         }
         
         .success-message {
@@ -221,6 +231,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 padding: 30px 20px;
             }
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+            position: relative;
+        }
+        .modal-content p {
+            margin: 0 0 20px;
+            font-size: 16px;
+            color: #333;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            background-color: #008C48;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-content button:hover {
+            background-color: #03c969;
+        }
+
+        /* Popup Error Text Styles */
+        .error-popup {
+            color: var(--error);
+            font-size: 15px;
+            margin-top: 5px;
+            display: none;
+            background: rgba(244, 67, 54, 0.1);
+            padding: 12px 10px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .error-popup.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -236,16 +299,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <p class="subtitle">Sign in to continue to your account</p>
             </div>
             
-            <form method="POST">
+            <form method="POST" id="loginForm">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                    <input type="email" id="email" name="email" placeholder="your@email.com" >
+                    <div class="error-popup" id="emailError">Please enter a valid email address.</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="password-field">
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" >
                         <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                 <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
@@ -253,6 +317,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </svg>
                         </button>
                     </div>
+                    <div class="error-popup" id="passwordError">Password must be at least 5 characters long.</div>
                 </div>
                 
                 <button type="submit" class="button">Login</button>
@@ -267,11 +332,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
     </div>
     
+    <!-- Modal for Messages -->
+    <div class="modal-overlay" id="messageModal">
+        <div class="modal-content">
+            <p id="modalMessage"></p>
+            <button onclick="closeModal('messageModal')">OK</button>
+        </div>
+    </div>
+    
     <script>
+        // Function to show modal with a message
+        function showModal(message, modalId = 'messageModal', redirect = null) {
+            const modal = document.getElementById(modalId);
+            const modalMessage = document.getElementById('modalMessage');
+            modalMessage.textContent = message;
+            modal.style.display = 'flex';
+            if (redirect) {
+                setTimeout(() => {
+                    window.location.href = redirect;
+                }, 2000);
+            }
+        }
+
+        // Function to close modal
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+        }
+
         function togglePasswordVisibility(fieldId) {
             const field = document.getElementById(fieldId);
             field.type = field.type === 'password' ? 'text' : 'password';
         }
+
+        // Validation Functions
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validatePassword(password) {
+            return password.length >= 5;
+        }
+
+        // Show/Hide Error Popup
+        function showError(elementId, show) {
+            const errorElement = document.getElementById(elementId);
+            if (show) {
+                errorElement.classList.add('visible');
+            } else {
+                errorElement.classList.remove('visible');
+            }
+        }
+
+        // Real-time validation
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value.trim();
+            showError('emailError', !validateEmail(email) && email !== '');
+        });
+
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            showError('passwordError', !validatePassword(password) && password !== '');
+        });
+
+        // Form submission validation
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            let hasError = false;
+
+            if (!validateEmail(email)) {
+                showError('emailError', true);
+                hasError = true;
+            }
+
+            if (!validatePassword(password)) {
+                showError('passwordError', true);
+                hasError = true;
+            }
+
+            if (hasError) {
+                e.preventDefault();
+            }
+        });
+
+        // Show error messages from PHP
+        <?php if (isset($errorMessage)) { ?>
+            showModal("<?php echo $errorMessage; ?>", 'messageModal', 'login.php');
+        <?php } ?>
     </script>
 </body>
 </html>
