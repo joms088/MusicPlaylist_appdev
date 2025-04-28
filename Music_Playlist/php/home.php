@@ -14,6 +14,14 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
+
+// Fetch user details for profile
+$sql_user = "SELECT username, email FROM users WHERE user_id = ?";
+$stmt_user = $conn->prepare($sql_user);
+$stmt_user->bind_param("i", $user_id);
+$stmt_user->execute();
+$user_result = $stmt_user->get_result();
+$user = $user_result->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,327 +32,14 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" 
     integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" 
     crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../css/home.css">
     <title>Home</title>
-<style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex; 
-            background: linear-gradient(to bottom, black, gray) no-repeat;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-        }
-
-        nav {
-            width: 20%; 
-            background-color: #000000;
-            padding: 10px 0; 
-            height: 100vh; 
-        }
-        .nav_menu {
-            display: flex;
-            flex-direction: column; 
-            align-items: center; 
-        }
-        .nav_menu a {
-            color: white;
-            text-decoration: none;
-            padding: 14px 20px;
-            width: 89%; 
-            text-align: center; 
-            transition: background-color 0.3s;
-        }
-        .nav_menu a:hover {
-            background-color: #232121;
-            border-radius: 5px;
-        }
-
-        .content {
-            flex: 1; 
-            padding: 20px; 
-        }
-        .home {
-            margin-top: 40px;
-        }
-
-        .search_container {
-            position: relative;
-            display: inline-block;
-        }
-        .search_bar {
-            width: 690px; 
-            padding: 10px 35px 10px 10px; 
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            outline: none;
-            margin-top: 20px;
-            margin-left: 150px;
-            margin-bottom: 50px;
-        }
-        .search_icon {
-            position: absolute;
-            right: 10px;
-            top: 35%;
-            transform: translateY(-50%);
-            color: #555;
-            cursor: pointer;
-        }
-
-        .btn_logout {
-            margin-left: 200px;
-            padding: 5px;
-            background-color: #008C48;
-            border: none;
-            border-radius: 10px;
-            width: 100px;
-            height: 40px;
-            color: white;
-            font-weight: bold;
-        }
-        .btn_logout:hover {
-            background-color: #03c969;
-            cursor: pointer;
-        }
-
-        .most_played {
-            width: 100%;
-            max-height: 200px;
-            overflow: hidden;
-            margin: 20px 0;
-            background: rgba(255, 255, 255, 0.1);
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .song_list {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            padding: 10px;
-            max-height: 70vh;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #888 #333;
-        }
-        .song_list::-webkit-scrollbar {
-            width: 8px;
-        }
-        .song_list::-webkit-scrollbar-track {
-            background: #333;
-            border-radius: 10px;
-        }
-        .song_list::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        .song_list::-webkit-scrollbar-thumb:hover {
-            background: #aaa;
-        }
-        .song_list::before {
-            color: white;
-            text-align: center;
-            grid-column: span 2;
-        }
-
-        .most_played::before {
-            content: "Most Played - No data yet";
-            color: #bbb;
-            font-size: 18px;
-        }
-        .welcome-message {
-            color: white;
-            font-size: 24px;
-            margin: 20px;
-        }
-        .p_song_name{
-            color: white;
-        }
-
-        .song_item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between; 
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: rgba(255, 255, 255, 0.1);
-            gap: 10px;
-            width: 95%;
-            cursor: pointer;
-        }
-        .song_img {
-            width: 50px;
-            height: 50px;
-            border-radius: 5px;
-            object-fit: cover;
-        }
-        .p_song_name {
-            flex-grow: 1;
-            color: white;
-            font-size: 16px;
-        }
-        .song_actions {
-            display: flex;
-            gap: 8px;
-        }
-        .icon_btn {
-            border: none;
-            padding: 8px;
-            width: 35px;
-            height: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 16px;
-            transition: 0.3s ease-in-out;
-        }
-        .icon_add {
-            background-color: #008C48;
-            color: white;
-        }
-        .icon_add:hover {
-            background-color: #03c969;
-        }
-        .icon_remove {
-            background-color: #8B0000;
-            color: white;
-        }
-        .icon_remove:hover {
-            background-color: #FF0000;
-        }
-        .popup_player {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 90px;
-            border-radius: 10px;
-            width: 700px;
-            text-align: center;
-        }
-        .popup_player img {
-            width: 60%;
-            height: 100%;
-            border-radius: 10px;
-        }
-        .popup_player .close_btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            cursor: pointer;
-            font-size: 30px;
-        }
-        .p_no_songs_available{
-            color: white;
-        }
-        #lyricsContainer {
-            display: none; 
-            max-height: 200px; 
-            overflow-y: auto;
-            text-align: center;
-            font-size: 16px;
-            color: white;
-            margin-top: 20px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 5px;
-            width: 100%;
-            white-space: pre-line; 
-        }
-        #lyricsText {
-            max-height: 300px; 
-            white-space: pre-wrap; 
-        }
-        @keyframes scrollLyrics {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-100%); }
-        }
-        .playlist_popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 400px;
-            text-align: center;
-        }
-        .playlist_popup select {
-            width: 100%;
-            padding: 8px;
-            margin-top: 10px;
-        }
-        .playlist_popup button {
-            background-color: #008C48;
-            color: white;
-            padding: 10px;
-            border: none;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-        .playlist_popup .close_btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            cursor: pointer;
-            font-size: 30px;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 300px;
-            position: relative;
-        }
-        .modal-content p {
-            margin: 0 0 20px;
-            font-size: 16px;
-            color: #333;
-        }
-        .modal-content button {
-            padding: 10px 20px;
-            background-color: #008C48;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .modal-content button:hover {
-            background-color: #03c969;
-        }
-</style>
+    
 </head>
 <body>
     <nav>
         <div class="nav_menu">
+            <a href="profile.php"><i class="uil uil-user"></i> Profile</a>
             <a href="home.php" class="home"><i class="uil uil-estate"></i> Home</a>
             <a href="add_song.php"><i class="uil uil-music"></i> Add Song</a>
             <a href="view_playlist.php"><i class="uil uil-list-ul"></i> View Playlist</a>
@@ -364,13 +59,20 @@ $result = $stmt->get_result();
         <?php
             if ($result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
+                    $song_name = htmlspecialchars($row["song_name"]);
+                    $parts = explode(" - ", $song_name);
+                    $artist = isset($parts[0]) ? $parts[0] : "";
+                    $title = isset($parts[1]) ? $parts[1] : $song_name;
                     echo "<div class='song_item'>";
                     echo "<img src='" . htmlspecialchars($row["picture"]) . "' alt='Song Image' class='song_img'>";
-                    echo "<p class='p_song_name'>" . htmlspecialchars($row["song_name"]) . "</p>";
+                    echo "<div class='song_info'>";
+                    echo "<p class='p_song_title'>" . htmlspecialchars($title) . "</p>";
+                    echo "<p class='p_song_artist'>" . htmlspecialchars($artist) . "</p>";
+                    echo "</div>";
                     echo "<div class='song_actions'>";
                     echo '<button class="icon_btn icon_play" onclick="showPlayer(' . 
                     '\'' . htmlspecialchars($row["picture"]) . '\', ' . 
-                    '\'' . htmlspecialchars($row["song_name"]) . '\', ' . 
+                    '\'' . $song_name . '\', ' . 
                     '\'' . htmlspecialchars($row["youtube_link"]) . '\'' . 
                     ')"><i class="fas fa-play"></i></button>';
                     echo "<button class='icon_btn icon_add' onclick='addToPlaylist(" . $row["song_id"] . ")'><i class='fas fa-plus'></i></button>";
@@ -384,6 +86,7 @@ $result = $stmt->get_result();
             echo "</div>";
             
             $stmt->close();
+            $stmt_user->close();
             $conn->close();
             ?>
         </div>
@@ -420,9 +123,6 @@ $result = $stmt->get_result();
     </div>
 </div>
 
-<script src="script.js"></script>
-</body>
-</html>
 <script>
     // Function to show modal with a message
     function showModal(message, modalId = 'messageModal') {
@@ -507,7 +207,7 @@ $result = $stmt->get_result();
         document.getElementById("playlistPopup").style.display = "none";
     }
 
-    function removeSong(songId) {
+    function deleteSong(songId) {
         let confirmAction = confirm('Are you sure you want to remove this song?');
         if (confirmAction) {
             window.location.href = "remove_song.php?song_id=" + songId;
@@ -595,9 +295,10 @@ $result = $stmt->get_result();
             const searchTerm = searchBar.value.toLowerCase();
             
             songItems.forEach(item => {
-                const songName = item.querySelector('.p_song_name').textContent.toLowerCase();
+                const songTitle = item.querySelector('.p_song_title').textContent.toLowerCase();
+                const songArtist = item.querySelector('.p_song_artist').textContent.toLowerCase();
                 
-                if (songName.includes(searchTerm)) {
+                if (songTitle.includes(searchTerm) || songArtist.includes(searchTerm)) {
                     item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
@@ -635,3 +336,5 @@ $result = $stmt->get_result();
         });
     });
 </script>
+</body>
+</html>

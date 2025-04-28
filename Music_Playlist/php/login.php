@@ -302,7 +302,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <form method="POST" id="loginForm">
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="your@email.com" >
+                    <input type="email" id="email" name="email" placeholder="example@email.com" >
                     <div class="error-popup" id="emailError">Please enter a valid email address.</div>
                 </div>
                 

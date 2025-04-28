@@ -16,6 +16,14 @@ while ($row = $result->fetch_assoc()) {
     $playlists[] = $row;
 }
 
+// Fetch user details for profile
+$sql_user = "SELECT username, email FROM users WHERE user_id = ?";
+$stmt_user = $conn->prepare($sql_user);
+$stmt_user->bind_param("i", $user_id);
+$stmt_user->execute();
+$user_result = $stmt_user->get_result();
+$user = $user_result->fetch_assoc();
+$stmt_user->close();
 $stmt->close();
 $conn->close();
 ?>
@@ -30,220 +38,15 @@ $conn->close();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" 
     integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" 
     crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="../css/viewplaylist.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex; 
-            background: linear-gradient(to bottom, black, gray);
-            height: 100vh;
-        }
-
-        nav {
-            width: 20%; 
-            background-color: #000000;
-            padding: 10px 0; 
-            height: 100vh; 
-        }
-        .nav_menu {
-            display: flex;
-            flex-direction: column; 
-            align-items: center; 
-        }
-        .nav_menu a {
-            color: white;
-            text-decoration: none;
-            padding: 14px 20px;
-            width: 89%; 
-            text-align: center; 
-            transition: background-color 0.3s;
-        }
-        .nav_menu a:hover {
-            background-color: #232121;
-            border-radius: 5px;
-        }
-        .home{
-            margin-top: 40px;
-        }
-
-        .content {
-            flex: 1;
-            padding: 50px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .new-playlist-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: white;
-            border-radius: 10px;
-            padding: 12px 20px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-            width: fit-content;
-        }
-        .new-playlist-btn:hover{
-            background: gray;
-            transition: .2s;
-        }
-        .new-playlist-btn i {
-            font-size: 22px;
-            color: black;
-        }
-
-        .playlist-list {
-            margin-top: 30px;
-        }
-        .PlaylistName_id{
-            color: white;
-            text-decoration: none;
-        }
-        .PlaylistName_id:hover{
-            color: #00ccff;
-            text-decoration: none;
-        }
-        .playlist-item {
-            font-size: 20px;
-            color: white;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: rgba(255, 255, 255, 0.1);
-            gap: 10px;
-            width: 95%;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        .playlist-item:hover {
-            color: #00ffcc;
-        }
-
-        .delete-btn {
-            font-size: 22px;
-            cursor: pointer;
-            color: red;
-        }
-
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        .popup-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 300px;
-        }
-        .popup-box input {
-            width: 90%;
-            padding: 10px;
-            margin: 10px 0;
-            font-size: 16px;
-            border: none;
-            border-bottom: 2px solid black;
-            outline: none;
-            background: transparent;
-        }
-        .popup-buttons {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 10px;
-        }
-        .popup-buttons button {
-            padding: 8px 15px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .btn-cancel {
-            background-color: #8B0000;
-            color: white;
-            border-radius: 5px;
-        }
-        .btn-cancel:hover{
-            background-color:rgb(101, 2, 2);
-        }
-        .btn-confirm {
-            background-color: #008C48;
-            color: white;
-            border-radius: 5px;
-        }
-        .btn-confirm:hover{
-            background-color:rgb(1, 87, 45);
-            transition: .2s;
-        }
-
-        #songsContainer {
-            margin-top: 20px;
-            color: white;
-        }
-
-        /* Modal Styles */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            width: 300px;
-            position: relative;
-        }
-        .modal-content p {
-            margin: 0 0 20px;
-            font-size: 16px;
-            color: #333;
-        }
-        .modal-content button {
-            padding: 10px 20px;
-            background-color: #008C48;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .modal-content button:hover {
-            background-color: #03c969;
-        }
-    </style>
+  
 </head>
 <body>
 
     <nav>
         <div class="nav_menu">
+            <a href="javascript:void(0)" onclick="showProfilePopup()"><i class="uil uil-user"></i> Profile</a>
             <a href="../php/home.php" class="home"><i class="uil uil-estate"></i> Home</a>
             <a href="../php/add_song.php"><i class="uil uil-music"></i> Add Song</a>
             <a href="../php/view_playlist.php"><i class="uil uil-list-ul"></i> View Playlist</a>
@@ -265,6 +68,25 @@ $conn->close();
             </div>
         <?php endforeach; ?>
         </div>
+    </div>
+
+    <!-- Profile Popup -->
+    <div id="profilePopup" class="profile_popup">
+        <span class="close_btn" onclick="closeProfilePopup()">×</span>
+        <h2>Profile</h2>
+        <form id="editProfileForm" onsubmit="event.preventDefault(); updateProfile();">
+            <h3>Edit Profile</h3>
+            <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" placeholder="Username" required>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" placeholder="Email" required>
+            <button type="submit">Update Profile</button>
+        </form>
+        <form id="changePasswordForm" onsubmit="event.preventDefault(); changePassword();">
+            <h3>Change Password</h3>
+            <input type="password" id="currentPassword" name="currentPassword" placeholder="Current Password" required>
+            <input type="password" id="newPassword" name="newPassword" placeholder="New Password" required>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm New Password" required>
+            <button type="submit">Change Password</button>
+        </form>
     </div>
 
     <div class="popup-overlay" id="popup">
@@ -299,6 +121,62 @@ $conn->close();
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             modal.style.display = 'none';
+        }
+
+        // Profile Popup Functions
+        function showProfilePopup() {
+            document.getElementById('profilePopup').style.display = 'block';
+        }
+
+        function closeProfilePopup() {
+            document.getElementById('profilePopup').style.display = 'none';
+        }
+
+        function updateProfile() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+
+            fetch('update_profile.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `username=${encodeURIComponent(username)}&email=${encodeURIComponent(email)}`
+            })
+            .then(response => response.text())
+            .then(result => {
+                showModal(result);
+            })
+            .catch(error => {
+                console.error('Error updating profile:', error);
+                showModal('Error updating profile.');
+            });
+        }
+
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showModal('New password and confirmation do not match.');
+                return;
+            }
+
+            fetch('change_password.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `currentPassword=${encodeURIComponent(currentPassword)}&newPassword=${encodeURIComponent(newPassword)}`
+            })
+            .then(response => response.text())
+            .then(result => {
+                showModal(result);
+                if (result.includes('successfully')) {
+                    document.getElementById('changePasswordForm').reset();
+                }
+            })
+            .catch(error => {
+                console.error('Error changing password:', error);
+                showModal('Error changing password.');
+            });
         }
 
         $(document).ready(function() {
